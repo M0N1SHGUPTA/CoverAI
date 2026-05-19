@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ApplyAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="popup.css" />
+</head>
+<body>
+  <div class="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <div class="logo-mark">A</div>
+        <span class="logo-text">ApplyAI</span>
+      </div>
+      <div class="header-actions">
+        <span class="version-tag">v1.0</span>
+      </div>
+    </header>
+
+    <!-- Tabs -->
+    <nav class="tabs">
+      <button class="tab active" data-tab="generate">Generate</button>
+      <button class="tab" data-tab="resume">Resume</button>
+    </nav>
+
+    <!-- Generate Tab -->
+    <div class="tab-content active" id="tab-generate">
+
+      <!-- Status -->
+      <div class="status-bar" id="jobStatus">
+        <div class="status-indicator" id="statusDot"></div>
+        <span class="status-text" id="statusText">Click Scan Page to read job details</span>
+      </div>
+
+      <!-- Job Preview Card -->
+      <div class="card job-card hidden" id="jobPreview">
+        <div class="card-row">
+          <span class="card-label">Job</span>
+          <span class="card-value" id="previewTitle"></span>
+        </div>
+        <div class="card-row">
+          <span class="card-label">Source</span>
+          <div class="card-value-group">
+            <span class="card-value card-url" id="previewUrl"></span>
+            <span class="badge hidden" id="platformBadge"></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls -->
+      <div class="controls">
+        <div class="control-group">
+          <label class="label">Tone</label>
+          <select class="select" id="toneSelect">
+            <option value="professional">Professional</option>
+            <option value="enthusiastic" selected>Enthusiastic</option>
+            <option value="concise">Short & Punchy</option>
+            <option value="technical">Technical</option>
+          </select>
+        </div>
+        <div class="control-group">
+          <label class="label">Type</label>
+          <select class="select" id="typeSelect">
+            <option value="cover_letter" selected>Cover Letter</option>
+            <option value="cold_email">Cold Email</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Action Buttons -->
+      <div class="actions">
+        <button class="btn btn-outline" id="scanBtn">Scan Page</button>
+        <button class="btn btn-primary" id="generateBtn" disabled>Generate</button>
+      </div>
+
+      <!-- Output -->
+      <div class="output hidden" id="outputSection">
+        <div class="output-top">
+          <span class="label">Output</span>
+          <div class="output-tools">
+            <button class="tool-btn" id="regenerateBtn" title="Regenerate">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 2v6h-6"/><path d="M3 12a9 9 0 0 1 15-6.7L21 8"/><path d="M3 22v-6h6"/><path d="M21 12a9 9 0 0 1-15 6.7L3 16"/></svg>
+            </button>
+            <button class="tool-btn" id="copyBtn" title="Copy">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+            </button>
+          </div>
+        </div>
+        <textarea class="output-area" id="outputArea" placeholder="Your message will appear here..."></textarea>
+        <div class="output-meta">
+          <span class="char-count" id="charCount">0 chars</span>
+          <span class="copy-toast hidden" id="copyFeedback">Copied!</span>
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div class="loader hidden" id="loadingSection">
+        <div class="loader-track"><div class="loader-bar"></div></div>
+        <span class="loader-text" id="loadingText">Generating…</span>
+      </div>
+
+      <!-- Error -->
+      <div class="error hidden" id="errorBox">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
+        <span id="errorText"></span>
+      </div>
+
+    </div>
+
+    <!-- Resume Tab -->
+    <div class="tab-content" id="tab-resume">
+
+      <p class="hint">Paste your resume or drag a PDF into the drop zone below.</p>
+
+      <!-- Drop Zone -->
+      <div class="drop-zone" id="dropZone">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
+        <span class="drop-zone-label">Drop PDF here</span>
+      </div>
+      <div class="upload-feedback">
+        <span class="upload-status" id="uploadStatus"></span>
+      </div>
+
+      <textarea class="resume-area" id="resumeInput" placeholder="Paste your resume here — plain text works best.
+
+Include your name, skills, projects, experience, and links (GitHub, LinkedIn, etc.)"></textarea>
+
+      <button class="btn btn-primary btn-full" id="saveResume">Save Resume</button>
+      <span class="save-toast hidden" id="saveFeedback">Resume saved</span>
+
+    </div>
+
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
