@@ -9,8 +9,12 @@
 #   POST /upload-resume  — extracts text from a PDF resume
 #   GET  /health         — simple alive check
 
-from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
+from slowapi import Limiter
+from slowapi.util import get_remote_address
+from slowapi.errors import RateLimitExceeded
 from schemas import GenerateRequest
 from groq import Groq
 from dotenv import load_dotenv
@@ -20,7 +24,33 @@ import os
 
 load_dotenv()
 
+# --- Rate Limiting ---
+#
+# Without this, anyone who finds your server URL could spam /generate and
+# burn through your Groq API quota in minutes. slowapi tracks requests by
+# IP address and returns a 429 (Too Many Requests) if someone goes too fast.
+#
+# Current limits:
+#   /generate      → 10 requests per minute (one cover letter every 6 seconds is plenty)
+#   /upload-resume → 5 per minute (you're not uploading 5 resumes a minute)
+#   /health        → no limit (it's just a ping)
+#
+# The key_func tells slowapi how to identify each user. We use their IP address.
+# Behind a reverse proxy (Railway, Render, etc.), make sure X-Forwarded-For
+# headers are set correctly or everyone will share the same limit.
+limiter = Limiter(key_func=get_remote_address)
+
 app = FastAPI(title="ApplyAI BackEnd")
+app.state.limiter = limiter
+
+# When someone hits the rate limit, return a clean JSON error instead of
+# a generic 500. The extension checks for 429 and shows a friendly message.
+@app.exception_handler(RateLimitExceeded)
+async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
+    return JSONResponse(
+        status_code=429,
+        content={"detail": "You're sending too many requests. Wait a minute and try again."},
+    )
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
@@ -168,7 +198,8 @@ TONE: {tone_style}"""
 
 
 @app.post("/generate")
-async def generate_message(req: GenerateRequest):
+@limiter.limit("10/minute")
+async def generate_message(request: Request, req: GenerateRequest):
     """
     The main endpoint. Extension sends resume + job text + tone + type,
     we generate a tailored message and send it back.
@@ -206,7 +237,8 @@ async def generate_message(req: GenerateRequest):
 
 
 @app.post("/upload-resume")
-async def upload_resume(file: UploadFile = File(...)):
+@limiter.limit("5/minute")
+async def upload_resume(request: Request, file: UploadFile = File(...)):
     """
     Accepts a PDF, extracts all the text from it using pdfplumber, and
     returns the plain text. The extension then saves this text locally
