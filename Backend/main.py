@@ -20,6 +20,7 @@ from groq import Groq
 from dotenv import load_dotenv
 import pdfplumber
 import tempfile
+from datetime import datetime
 import os
 
 load_dotenv()
@@ -54,6 +55,46 @@ async def rate_limit_handler(request: Request, exc: RateLimitExceeded):
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
+# --- Usage Analytics ---
+#
+# Simple in-memory tracker so you can see how many people are actually using
+# the extension after you deploy. It tracks:
+#   - unique IPs (≈ unique users)
+#   - total calls per endpoint
+#   - the last 50 requests with timestamps
+#
+# This lives in memory, so it resets when the server restarts. That's fine
+# for early stage — if you need persistent analytics later, swap this dict
+# for a Redis store or a database table.
+#
+# Check your stats anytime by hitting GET /stats
+analytics = {
+    "unique_ips": set(),          # set of all IPs that have ever called us
+    "total_generate": 0,          # how many times /generate was called
+    "total_uploads": 0,           # how many times /upload-resume was called
+    "recent_requests": [],        # last 50 requests with timestamps
+    "started_at": datetime.now().isoformat(),  # when the server started
+}
+
+def track_request(request: Request, endpoint: str):
+    """Log a request for analytics. Called inside each endpoint we want to track."""
+    ip = get_remote_address(request)
+    analytics["unique_ips"].add(ip)
+
+    if endpoint == "generate":
+        analytics["total_generate"] += 1
+    elif endpoint == "upload":
+        analytics["total_uploads"] += 1
+
+    # Keep only the last 50 requests so memory doesn't grow forever
+    analytics["recent_requests"].append({
+        "ip": ip,
+        "endpoint": endpoint,
+        "time": datetime.now().isoformat(),
+    })
+    if len(analytics["recent_requests"]) > 50:
+        analytics["recent_requests"] = analytics["recent_requests"][-50:]
+
 # If the main model hits a rate limit or goes down, we fall back to a smaller
 # one so the user doesn't just get an error. The 70b model writes better but
 # the 8b model is faster and has way higher rate limits on the free tier.
@@ -62,11 +103,22 @@ MODEL_CHAIN = [
     "llama-3.1-8b-instant",
 ]
 
-# The extension runs on a different origin (chrome-extension://...) so we
-# need CORS wide open during dev. Tighten this to your deployed URL later.
+# CORS — controls which websites can call our API.
+# In dev, we allow everything so the extension works without hassle.
+# In production, set the ALLOWED_ORIGINS env variable to lock it down to
+# just your extension. You'll find your extension's origin in chrome://extensions
+# after you load it — it looks like "chrome-extension://abcdef1234567890".
+#
+# Example for .env in production:
+#   ALLOWED_ORIGINS=chrome-extension://your-extension-id-here
+#
+# You can also comma-separate multiple origins if needed:
+#   ALLOWED_ORIGINS=chrome-extension://abc123,https://yourdomain.com
+allowed_origins = os.getenv("ALLOWED_ORIGINS", "*").split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=allowed_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -210,6 +262,9 @@ async def generate_message(request: Request, req: GenerateRequest):
     if len(req.job_text.strip()) < 50:
         raise HTTPException(status_code=400, detail="Job text is too short. Try scanning the page again.")
 
+    # Log this request so we can see usage in /stats
+    track_request(request, "generate")
+
     prompt = build_prompt(req)
 
     # Loop through models — if the first one fails (rate limit, 503, etc.),
@@ -247,6 +302,9 @@ async def upload_resume(request: Request, file: UploadFile = File(...)):
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
 
+    # Log this upload for analytics
+    track_request(request, "upload")
+
     try:
         # We write to a temp file because pdfplumber needs a file path.
         # The `delete=True` flag cleans it up automatically after we're done.
@@ -279,3 +337,21 @@ async def upload_resume(request: Request, file: UploadFile = File(...)):
 def health():
     """Quick check to see if the server is up. Hit /health and look for 'ok'."""
     return {"status": "ok"}
+
+
+@app.get("/stats")
+def stats():
+    """
+    Usage dashboard — hit this endpoint to see how many people are using
+    your extension. Shows unique users (by IP), total calls, and recent
+    activity. No auth for now since it's your personal project, but add
+    a secret token check here if you make the repo public.
+    """
+    return {
+        "unique_users": len(analytics["unique_ips"]),
+        "total_generate_calls": analytics["total_generate"],
+        "total_upload_calls": analytics["total_uploads"],
+        "total_calls": analytics["total_generate"] + analytics["total_uploads"],
+        "server_started_at": analytics["started_at"],
+        "recent_requests": analytics["recent_requests"][-10:],  # show last 10
+    }

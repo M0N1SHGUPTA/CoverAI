@@ -6,8 +6,15 @@
 //
 // No API keys live here — all AI calls go through our FastAPI server.
 
-// Point this to your deployed URL when you ship. During dev, localhost is fine.
+// --- Backend URL ---
+// During development, use localhost. When you deploy your backend to
+// Railway/Render/Fly.io, swap this to your deployed URL.
+//
+// For dev:
 const BACKEND_URL = 'http://localhost:8000';
+//
+// For production (uncomment and replace with your actual URL):
+// const BACKEND_URL = 'https://your-app-name.up.railway.app';
 
 // We trim the resume before sending to save tokens. 3000 chars is plenty
 // for the LLM to understand someone's background.
