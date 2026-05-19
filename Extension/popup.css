@@ -64,7 +64,7 @@ body {
 .logo-mark {
   width: 26px;
   height: 26px;
-  background: var(--text);
+  background: var(--accent);
   color: var(--white);
   border-radius: 8px;
   display: flex;

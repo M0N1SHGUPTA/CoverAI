@@ -4,9 +4,14 @@
   "version": "1.0.0",
   "description": "Scans job listings and generates tailored cover letters and cold emails using AI. Works on LinkedIn, Naukri, Indeed, and 10+ job platforms.",
   "permissions": ["activeTab", "storage", "scripting"],
-  "host_permissions": ["<all_urls>"],
   "action": {
     "default_popup": "popup.html",
-    "default_title": "ApplyAI"
+    "default_title": "ApplyAI",
+    "default_icon": {
+      "128": "icon128.png"
+    }
+  },
+  "icons": {
+    "128": "icon128.png"
   }
 }
