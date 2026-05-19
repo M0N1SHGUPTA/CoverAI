@@ -1,8 +1,20 @@
-// popup.js — ApplyAI Extension
+// popup.js — the brains behind the extension popup
+//
+// This runs every time the user clicks the extension icon. It handles
+// everything in the popup: switching tabs, saving the resume, scanning
+// the job page, calling our backend, and showing the generated message.
+//
+// No API keys live here — all AI calls go through our FastAPI server.
+
+// Point this to your deployed URL when you ship. During dev, localhost is fine.
 const BACKEND_URL = 'http://localhost:8000';
+
+// We trim the resume before sending to save tokens. 3000 chars is plenty
+// for the LLM to understand someone's background.
 const MAX_RESUME_CHARS = 3000;
 
-// DOM REFS
+// Grab all the DOM elements we'll need. Doing this once at the top is
+// faster than querying inside every event handler.
 const tabs           = document.querySelectorAll('.tab');
 const tabContents    = document.querySelectorAll('.tab-content');
 const scanBtn        = document.getElementById('scanBtn');
@@ -31,15 +43,19 @@ const saveFeedback   = document.getElementById('saveFeedback');
 const dropZone       = document.getElementById('dropZone');
 const uploadStatus   = document.getElementById('uploadStatus');
 
+// The scanned job data lives here between scan and generate.
+// Gets populated when the user clicks "Scan Page".
 let scannedJob = null;
 
-// INIT — load saved resume
+// When the popup opens, load whatever resume was saved previously.
+// chrome.storage.local persists across popup opens and browser restarts.
 document.addEventListener('DOMContentLoaded', async () => {
   const data = await chrome.storage.local.get(['resume']);
   if (data.resume) resumeInput.value = data.resume;
 });
 
-// TABS
+// Tab switching — the data-tab attribute on each button maps to the
+// id of the corresponding content panel (e.g., data-tab="generate" → #tab-generate)
 tabs.forEach(tab => {
   tab.addEventListener('click', () => {
     tabs.forEach(t => t.classList.remove('active'));
@@ -49,7 +65,8 @@ tabs.forEach(tab => {
   });
 });
 
-// SAVE RESUME
+// Save the resume text to local storage. It stays on the user's machine
+// and only gets sent to our server when they actually hit Generate.
 saveResumeBtn.addEventListener('click', async () => {
   const resume = resumeInput.value.trim();
   if (!resume) return;
@@ -58,14 +75,18 @@ saveResumeBtn.addEventListener('click', async () => {
   setTimeout(() => saveFeedback.classList.add('hidden'), 2000);
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PDF DRAG & DROP
-// Chrome extension popups CLOSE when a native file dialog opens.
-// Drag & drop avoids this — no native dialog, popup stays open.
-// ─────────────────────────────────────────────────────────────────────────────
+
+// --- PDF Drag & Drop ---
+//
+// We use drag & drop instead of a file picker because Chrome extension
+// popups close the moment a native file dialog opens (the popup loses
+// focus and Chrome kills it). Drag & drop keeps everything in the popup.
+
+// Prevent the browser from navigating to a dropped file
 document.addEventListener('dragover', (e) => e.preventDefault());
 document.addEventListener('drop', (e) => e.preventDefault());
 
+// Visual feedback when a file hovers over the drop zone
 dropZone.addEventListener('dragover', (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -78,6 +99,7 @@ dropZone.addEventListener('dragleave', (e) => {
   dropZone.classList.remove('drag-over');
 });
 
+// When the user drops a file, send it to our backend for text extraction
 dropZone.addEventListener('drop', async (e) => {
   e.preventDefault();
   e.stopPropagation();
@@ -109,6 +131,7 @@ dropZone.addEventListener('drop', async (e) => {
       throw new Error(err?.detail || 'Upload failed');
     }
 
+    // Paste the extracted text into the textarea and auto-save it
     const data = await response.json();
     resumeInput.value = data.resume_text;
     await chrome.storage.local.set({ resume: data.resume_text });
@@ -123,9 +146,12 @@ dropZone.addEventListener('drop', async (e) => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// SCAN PAGE
-// ─────────────────────────────────────────────────────────────────────────────
+
+// --- Scan Page ---
+//
+// This is the trickiest part. The popup can't read another tab's page
+// directly, so we inject content.js into the active tab and then ask
+// it to scrape the job description and send it back.
 scanBtn.addEventListener('click', async () => {
   setStatus('scanning', 'Scanning page...');
   hideError();
@@ -133,7 +159,12 @@ scanBtn.addEventListener('click', async () => {
 
   try {
     const [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
+
+    // Inject the content script. If it's already there from a previous
+    // scan, the catch swallows the "already injected" error silently.
     await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }).catch(() => {});
+
+    // Ask content.js to scrape the page and send back the results
     const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractJob' });
 
     if (!response || !response.text || response.text.length < 50) {
@@ -141,6 +172,7 @@ scanBtn.addEventListener('click', async () => {
       return;
     }
 
+    // Store the scraped data so Generate can use it
     scannedJob = response;
     setStatus('ready', 'Job page scanned!');
     previewTitle.textContent = response.title || 'Job Listing';
@@ -148,6 +180,7 @@ scanBtn.addEventListener('click', async () => {
     jobPreview.classList.remove('hidden');
     generateBtn.disabled = false;
 
+    // Show which platform we detected (if any)
     if (response.platform) {
       platformBadge.textContent = response.platform;
       platformBadge.classList.remove('hidden');
@@ -160,9 +193,10 @@ scanBtn.addEventListener('click', async () => {
   }
 });
 
-// ─────────────────────────────────────────────────────────────────────────────
-// GENERATE
-// ─────────────────────────────────────────────────────────────────────────────
+
+// --- Generate ---
+//
+// Both the "Generate" button and the "Regenerate" icon trigger the same function.
 generateBtn.addEventListener('click', () => doGenerate());
 regenerateBtn.addEventListener('click', () => doGenerate());
 
@@ -171,6 +205,7 @@ async function doGenerate() {
   hideOutput();
   const { resume } = await chrome.storage.local.get(['resume']);
 
+  // Make sure we have everything before calling the server
   if (!resume) { showError('Paste your resume in the "My Resume" tab first.'); return; }
   if (!scannedJob) { showError('Scan the job page first using "Scan Page".'); return; }
 
@@ -185,7 +220,8 @@ async function doGenerate() {
   }
 }
 
-// CALL BACKEND
+// Send resume + job data to our FastAPI backend and get back a message.
+// The resume is trimmed to save tokens on the Groq side.
 async function callBackend({ resume, job, tone, type }) {
   const response = await fetch(`${BACKEND_URL}/generate`, {
     method: 'POST',
@@ -205,7 +241,7 @@ async function callBackend({ resume, job, tone, type }) {
   return data.message;
 }
 
-// COPY
+// Copy the generated message to clipboard
 copyBtn.addEventListener('click', async () => {
   const text = outputArea.value;
   if (!text) return;
@@ -214,16 +250,19 @@ copyBtn.addEventListener('click', async () => {
   setTimeout(() => copyFeedback.classList.add('hidden'), 2000);
 });
 
-// CHARACTER COUNT
+// Live character count — updates as the user types or edits the output
 outputArea.addEventListener('input', () => updateCharCount());
 function updateCharCount() {
   const len = outputArea.value.length;
   charCount.textContent = `${len} char${len !== 1 ? 's' : ''}`;
 }
 
-// UI HELPERS
+
+// --- UI helpers ---
+// Small functions to keep the event handlers above clean and readable.
+
 function setStatus(state, message) {
-  statusDot.className = 'status-dot';
+  statusDot.className = 'status-indicator';
   if (state === 'ready') statusDot.classList.add('ready');
   if (state === 'error') statusDot.classList.add('error');
   statusText.textContent = message || state;

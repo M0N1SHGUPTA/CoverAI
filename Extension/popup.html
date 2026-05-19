@@ -4,6 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>ApplyAI</title>
+
+  <!-- Inter font from Google — gives the UI that clean, modern SaaS feel -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
@@ -12,7 +14,7 @@
 <body>
   <div class="app">
 
-    <!-- Header -->
+    <!-- Top bar with logo and version badge -->
     <header class="header">
       <div class="logo">
         <div class="logo-mark">A</div>
@@ -23,22 +25,22 @@
       </div>
     </header>
 
-    <!-- Tabs -->
+    <!-- Two tabs: one for generating messages, one for managing the resume -->
     <nav class="tabs">
       <button class="tab active" data-tab="generate">Generate</button>
       <button class="tab" data-tab="resume">Resume</button>
     </nav>
 
-    <!-- Generate Tab -->
+    <!-- ============ Generate Tab ============ -->
     <div class="tab-content active" id="tab-generate">
 
-      <!-- Status -->
+      <!-- Shows whether a job page has been scanned or not -->
       <div class="status-bar" id="jobStatus">
         <div class="status-indicator" id="statusDot"></div>
         <span class="status-text" id="statusText">Click Scan Page to read job details</span>
       </div>
 
-      <!-- Job Preview Card -->
+      <!-- After scanning, this card shows the job title, URL, and platform -->
       <div class="card job-card hidden" id="jobPreview">
         <div class="card-row">
           <span class="card-label">Job</span>
@@ -53,7 +55,7 @@
         </div>
       </div>
 
-      <!-- Controls -->
+      <!-- Tone and message type selectors, side by side -->
       <div class="controls">
         <div class="control-group">
           <label class="label">Tone</label>
@@ -73,13 +75,13 @@
         </div>
       </div>
 
-      <!-- Action Buttons -->
+      <!-- Main action buttons -->
       <div class="actions">
         <button class="btn btn-outline" id="scanBtn">Scan Page</button>
         <button class="btn btn-primary" id="generateBtn" disabled>Generate</button>
       </div>
 
-      <!-- Output -->
+      <!-- The generated message appears here. It's editable so users can tweak it. -->
       <div class="output hidden" id="outputSection">
         <div class="output-top">
           <span class="label">Output</span>
@@ -99,13 +101,13 @@
         </div>
       </div>
 
-      <!-- Loading -->
+      <!-- Progress bar while waiting for the AI response -->
       <div class="loader hidden" id="loadingSection">
         <div class="loader-track"><div class="loader-bar"></div></div>
         <span class="loader-text" id="loadingText">Generating…</span>
       </div>
 
-      <!-- Error -->
+      <!-- Error messages show up here -->
       <div class="error hidden" id="errorBox">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="15" y1="9" x2="9" y2="15"/><line x1="9" y1="9" x2="15" y2="15"/></svg>
         <span id="errorText"></span>
@@ -113,12 +115,13 @@
 
     </div>
 
-    <!-- Resume Tab -->
+    <!-- ============ Resume Tab ============ -->
     <div class="tab-content" id="tab-resume">
 
       <p class="hint">Paste your resume or drag a PDF into the drop zone below.</p>
 
-      <!-- Drop Zone -->
+      <!-- Drag & drop zone for PDF files. We don't use a file picker because
+           Chrome closes extension popups when a native dialog opens. -->
       <div class="drop-zone" id="dropZone">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="12" y1="18" x2="12" y2="12"/><polyline points="9 15 12 12 15 15"/></svg>
         <span class="drop-zone-label">Drop PDF here</span>
@@ -127,6 +130,7 @@
         <span class="upload-status" id="uploadStatus"></span>
       </div>
 
+      <!-- Plain text resume input. Users can paste directly or use the PDF upload above. -->
       <textarea class="resume-area" id="resumeInput" placeholder="Paste your resume here — plain text works best.
 
 Include your name, skills, projects, experience, and links (GitHub, LinkedIn, etc.)"></textarea>

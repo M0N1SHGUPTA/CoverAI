@@ -1,3 +1,14 @@
+# main.py — the FastAPI backend that powers the ApplyAI chrome extension
+#
+# This server sits between the extension and Groq's API. The extension sends
+# over a resume + scraped job description, we build a tailored prompt, hit
+# Groq, and send back a ready-to-use cover letter or cold email.
+#
+# There are only three endpoints:
+#   POST /generate       — builds the message using AI
+#   POST /upload-resume  — extracts text from a PDF resume
+#   GET  /health         — simple alive check
+
 from fastapi import FastAPI, HTTPException, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
 from schemas import GenerateRequest
@@ -5,37 +16,37 @@ from groq import Groq
 from dotenv import load_dotenv
 import pdfplumber
 import tempfile
-
 import os
 
 load_dotenv()
 
 app = FastAPI(title="ApplyAI BackEnd")
 
-client = Groq(api_key = os.getenv("GROQ_API_KEY"))
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
-# Model fallback chain — if the primary model fails (rate limit, overload),
-# we try the next one. Keeps the extension working even during Groq outages.
+# If the main model hits a rate limit or goes down, we fall back to a smaller
+# one so the user doesn't just get an error. The 70b model writes better but
+# the 8b model is faster and has way higher rate limits on the free tier.
 MODEL_CHAIN = [
-    "llama-3.3-70b-versatile",   # best quality, but rate-limited on free tier
-    "llama-3.1-8b-instant",       # faster, lower quality, higher rate limits
+    "llama-3.3-70b-versatile",
+    "llama-3.1-8b-instant",
 ]
 
+# The extension runs on a different origin (chrome-extension://...) so we
+# need CORS wide open during dev. Tighten this to your deployed URL later.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],       
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ─────────────────────────────────────────────────────────────────────────────
-# SYSTEM PROMPTS — separated from user data for better LLM instruction-following
+
+# --- System Prompts ---
 #
-# Why split system vs user?
-# - system = "who you are and how to behave" (stable across requests)
-# - user   = "here's the data, do the task" (changes every request)
-# - LLMs follow instructions better when roles are clearly separated
-# ─────────────────────────────────────────────────────────────────────────────
+# We keep the "who you are" instructions separate from the "here's the data"
+# part. LLMs follow rules way better when the system message is stable and
+# the user message is just the variable stuff (resume, JD, tone).
 
 COVER_LETTER_SYSTEM = """You are an expert job application strategist. Your goal is to get this candidate shortlisted — by both human recruiters AND ATS systems.
 
@@ -107,12 +118,14 @@ HARD RULES:
 - Sound like a peer reaching out, not a job applicant begging
 - Output ONLY the email. No preamble, no labels."""
 
-# Temperature per tone — controls creativity vs focus
+# Each tone needs a different temperature. "Concise" should be really focused
+# (low temp = less randomness), while "enthusiastic" benefits from a bit more
+# creative freedom.
 TONE_TEMPERATURES = {
-    "professional": 0.6,   # focused, polished
-    "enthusiastic": 0.8,   # more creative, energetic
-    "concise":      0.5,   # tight, every word precise
-    "technical":    0.6,    # accurate, specific
+    "professional": 0.6,
+    "enthusiastic": 0.8,
+    "concise":      0.5,
+    "technical":    0.6,
 }
 
 TONE_INSTRUCTIONS = {
@@ -122,9 +135,13 @@ TONE_INSTRUCTIONS = {
     "technical":     "technically focused — highlight specific technical skills that match the JD",
 }
 
-# Prompt Builder — returns system message, user message, and temperature
+
 def build_prompt(req: GenerateRequest) -> dict:
-    # Pick system prompt based on message type
+    """
+    Takes the incoming request and builds the two messages we'll send to Groq:
+    a system message (the role/rules) and a user message (the actual data).
+    Also picks the right temperature for the selected tone.
+    """
     if req.message_type == "cold_email":
         system_prompt = COLD_EMAIL_SYSTEM
     else:
@@ -133,6 +150,8 @@ def build_prompt(req: GenerateRequest) -> dict:
     tone_style = TONE_INSTRUCTIONS.get(req.tone, "professional")
     temperature = TONE_TEMPERATURES.get(req.tone, 0.6)
 
+    # The user message is just the raw data — JD, resume, and chosen tone.
+    # Keeping this clean makes it easier for the model to focus on the task.
     user_prompt = f"""JOB POSTING (from {req.job_url}):
 \"\"\"{req.job_text}\"\"\"
 
@@ -147,27 +166,23 @@ TONE: {tone_style}"""
         "temperature": temperature,
     }
 
-# ─────────────────────────────────────────────────────────────────────────────
-# /generate — the only endpoint the extension calls
-#
-# Flow:
-# 1. Extension POSTs { resume, job_text, job_url, tone, message_type }
-# 2. We build the system + user prompts
-# 3. We call Groq with llama-3.3-70b-versatile (free, fast, great quality)
-# 4. We return { message: "..." } back to the extension
-# ─────────────────────────────────────────────────────────────────────────────
+
 @app.post("/generate")
 async def generate_message(req: GenerateRequest):
-    # Basic validation — don't waste a Groq call on empty data
+    """
+    The main endpoint. Extension sends resume + job text + tone + type,
+    we generate a tailored message and send it back.
+    """
+    # Quick sanity checks before we burn a Groq API call
     if len(req.resume.strip()) < 50:
         raise HTTPException(status_code=400, detail="Resume is too short or empty.")
     if len(req.job_text.strip()) < 50:
         raise HTTPException(status_code=400, detail="Job text is too short. Try scanning the page again.")
- 
+
     prompt = build_prompt(req)
- 
-    # Try each model in the fallback chain
-    # If the primary model fails (rate limit, overload), we try the next one
+
+    # Loop through models — if the first one fails (rate limit, 503, etc.),
+    # we try the backup. This way the user almost never sees an error.
     last_error = None
     for model in MODEL_CHAIN:
         try:
@@ -184,57 +199,51 @@ async def generate_message(req: GenerateRequest):
             return {"message": message, "model_used": model}
         except Exception as e:
             last_error = e
-            continue  # try next model in the chain
- 
-    # All models failed
+            continue
+
+    # If we get here, every model in the chain failed
     raise HTTPException(status_code=503, detail=str(last_error))
 
- 
- 
-# ─────────────────────────────────────────────────────────────────────────────
-# /upload-resume — PDF resume upload
-#
-# Accepts a PDF file, extracts text using pdfplumber, returns plain text.
-# The extension saves this text in chrome.storage.local just like pasted text.
-# ─────────────────────────────────────────────────────────────────────────────
+
 @app.post("/upload-resume")
 async def upload_resume(file: UploadFile = File(...)):
+    """
+    Accepts a PDF, extracts all the text from it using pdfplumber, and
+    returns the plain text. The extension then saves this text locally
+    just like if the user had pasted it manually.
+    """
     if not file.filename.lower().endswith(".pdf"):
         raise HTTPException(status_code=400, detail="Only PDF files are supported.")
- 
+
     try:
-        # Save to temp file, extract with pdfplumber, clean up
+        # We write to a temp file because pdfplumber needs a file path.
+        # The `delete=True` flag cleans it up automatically after we're done.
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=True) as tmp:
             content = await file.read()
             tmp.write(content)
             tmp.flush()
- 
+
             text_parts = []
             with pdfplumber.open(tmp.name) as pdf:
                 for page in pdf.pages:
                     page_text = page.extract_text()
                     if page_text:
                         text_parts.append(page_text)
- 
+
         resume_text = "\n\n".join(text_parts).strip()
- 
+
         if len(resume_text) < 50:
             raise HTTPException(status_code=400, detail="Could not extract enough text from PDF. Try pasting manually.")
- 
+
         return {"resume_text": resume_text}
- 
+
     except HTTPException:
         raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error reading PDF: {str(e)}")
 
 
-
-
-# ─────────────────────────────────────────────────────────────────────────────
-# HEALTH CHECK
-# Optional but useful — hit http://localhost:8000/health to confirm server is up
-# ─────────────────────────────────────────────────────────────────────────────
 @app.get("/health")
 def health():
+    """Quick check to see if the server is up. Hit /health and look for 'ok'."""
     return {"status": "ok"}

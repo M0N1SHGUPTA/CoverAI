@@ -1,8 +1,10 @@
-// content.js — extracts relevant job description text from the current page
+// content.js — injected into the job page to scrape the job description
+//
+// The popup can't read another tab's DOM directly (Chrome sandboxes them),
+// so this script acts as the bridge. It gets injected into the active tab,
+// reads the page, and sends the data back via Chrome's message passing.
 
-// ─────────────────────────────────────────────────────────────────────────────
-// PLATFORM DETECTION — identify which job site we're on from the URL
-// ─────────────────────────────────────────────────────────────────────────────
+// Figure out which job site we're on based on the URL
 function detectPlatform() {
   const host = window.location.hostname.toLowerCase();
   if (host.includes('linkedin.com'))    return 'LinkedIn';
@@ -17,85 +19,55 @@ function detectPlatform() {
   if (host.includes('workday.com'))     return 'Workday';
   if (host.includes('monster.com'))     return 'Monster';
   if (host.includes('ziprecruiter.com')) return 'ZipRecruiter';
-  return null; // unknown platform
+  return null;
 }
 
+// Try platform-specific selectors first, then fall back to generic ones.
+// We need at least 100 chars to avoid grabbing tiny nav elements by mistake.
 function extractJobContent() {
-  // Priority selectors for major job platforms
-  const platformSelectors = [
-    // LinkedIn
-    '.jobs-description__content',
-    '.job-details-jobs-unified-top-card__job-title',
-    '.jobs-unified-top-card__job-title',
-    '.jobs-description',
-    // Wellfound / AngelList
-    '.job-description',
-    '[data-test="job-description"]',
-    '.styles_component__2b0Bd',
-    // Naukri
-    '.job-desc',
-    '.JDC__dang-inner-html',
-    '.styles_jhc__desc__WcCLS',
-    // Indeed
-    '#jobDescriptionText',
-    '.jobsearch-jobDescriptionText',
-    // Glassdoor
-    '.JobDetails_jobDescription__uW_fK',
-    '[data-test="description"]',
-    // Internshala
-    '.internship_details',
-    '.about_company',
-    // WorkAtAStartup / YC
-    '.ycdc-card',
-    '.company-description',
-    // Generic fallbacks
-    '[class*="job-description"]',
-    '[class*="jobDescription"]',
-    '[class*="job_description"]',
-    '[id*="job-description"]',
-    '[id*="jobDescription"]',
-    'article',
-    'main',
+  const selectors = [
+    '.jobs-description__content', '.jobs-description',                   // LinkedIn
+    '.job-description', '[data-test="job-description"]',                 // Wellfound
+    '.job-desc', '.JDC__dang-inner-html', '.styles_jhc__desc__WcCLS',   // Naukri
+    '#jobDescriptionText', '.jobsearch-jobDescriptionText',              // Indeed
+    '.JobDetails_jobDescription__uW_fK', '[data-test="description"]',   // Glassdoor
+    '.internship_details', '.about_company',                             // Internshala
+    '.ycdc-card', '.company-description',                                // YC
+    '[class*="job-description"]', '[class*="jobDescription"]',           // generic
+    '[id*="job-description"]', '[id*="jobDescription"]',
+    'article', 'main',
   ];
 
   let jobText = '';
 
-  for (const selector of platformSelectors) {
-    const el = document.querySelector(selector);
+  for (const sel of selectors) {
+    const el = document.querySelector(sel);
     if (el && el.innerText.trim().length > 100) {
       jobText = el.innerText.trim();
       break;
     }
   }
 
-  // Fallback: grab body text, strip nav/header/footer noise
+  // Last resort: grab the whole page but strip out navigation and noise
   if (!jobText) {
-    const skipTags = ['script', 'style', 'nav', 'header', 'footer', 'aside'];
     const clone = document.body.cloneNode(true);
-    skipTags.forEach(tag => {
+    ['script', 'style', 'nav', 'header', 'footer', 'aside'].forEach(tag => {
       clone.querySelectorAll(tag).forEach(el => el.remove());
     });
     jobText = clone.innerText.trim();
   }
 
-  // Trim to ~4000 chars to avoid token overflow
+  // Keep it under 4000 chars so we don't blow up the LLM's token limit
   if (jobText.length > 4000) {
     jobText = jobText.substring(0, 4000) + '\n...[truncated]';
   }
 
-  return {
-    text: jobText,
-    url: window.location.href,
-    title: document.title,
-    platform: detectPlatform(),
-  };
+  return { text: jobText, url: window.location.href, title: document.title, platform: detectPlatform() };
 }
 
-// Listen for message from popup
+// The popup sends us a message asking to extract the job. We scrape and reply.
+// `return true` keeps the message channel open for the async response.
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'extractJob') {
-    const result = extractJobContent();
-    sendResponse(result);
-  }
+  if (request.action === 'extractJob') sendResponse(extractJobContent());
   return true;
 });

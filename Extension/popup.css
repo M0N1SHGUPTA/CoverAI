@@ -1,4 +1,6 @@
-/* popup.css — ApplyAI Premium UI */
+/* popup.css — all the styles for the ApplyAI extension popup.
+   Light theme, Inter font, blue accent. Designed to look clean
+   and professional, not like a typical browser extension. */
 
 :root {
   --white: #ffffff;
@@ -42,7 +44,7 @@ body {
   flex-direction: column;
 }
 
-/* ── Header ─────────────────────────────────────────────────────────────── */
+/* Header — logo on the left, version badge on the right */
 
 .header {
   display: flex;
@@ -90,7 +92,7 @@ body {
   padding: 2px 8px;
 }
 
-/* ── Tabs ────────────────────────────────────────────────────────────────── */
+/* Tabs — simple underline-style tabs, no background color changes */
 
 .tabs {
   display: flex;
@@ -123,7 +125,7 @@ body {
   border-bottom-color: var(--text);
 }
 
-/* ── Tab Content ─────────────────────────────────────────────────────────── */
+/* Tab panels — hidden by default, shown when the matching tab is active */
 
 .tab-content {
   display: none;
@@ -136,7 +138,7 @@ body {
   display: flex;
 }
 
-/* ── Status Bar ──────────────────────────────────────────────────────────── */
+/* Status bar — green dot when scanned, red when there's an error */
 
 .status-bar {
   display: flex;
@@ -171,7 +173,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* ── Job Preview Card ────────────────────────────────────────────────────── */
+/* Job preview card — Attio-style label/value rows showing the scanned job */
 
 .card {
   background: var(--surface);
@@ -235,7 +237,7 @@ body {
   flex-shrink: 0;
 }
 
-/* ── Controls ────────────────────────────────────────────────────────────── */
+/* Tone and type selectors — two dropdowns side by side */
 
 .controls {
   display: flex;
@@ -279,7 +281,7 @@ body {
 .select:hover { border-color: #ccc; }
 .select:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08); }
 
-/* ── Buttons ─────────────────────────────────────────────────────────────── */
+/* Buttons — primary (blue fill) and outline (border only) variants */
 
 .actions {
   display: flex;
@@ -327,7 +329,7 @@ body {
 
 .btn-full { width: 100%; }
 
-/* ── Output ──────────────────────────────────────────────────────────────── */
+/* Output section — the generated message with regenerate/copy tools */
 
 .output {
   display: flex;
@@ -410,7 +412,7 @@ body {
   100% { opacity: 0; }
 }
 
-/* ── Loading ─────────────────────────────────────────────────────────────── */
+/* Loading state — animated progress bar while waiting for the AI */
 
 .loader {
   display: flex;
@@ -446,7 +448,7 @@ body {
   color: var(--text-secondary);
 }
 
-/* ── Error ────────────────────────────────────────────────────────────────── */
+/* Error box — red background, shows when something goes wrong */
 
 .error {
   display: flex;
@@ -460,7 +462,9 @@ body {
   padding: 10px 14px;
 }
 
-/* ── Drop Zone ───────────────────────────────────────────────────────────── */
+/* PDF drop zone — drag a file here to upload it.
+   We use drag & drop instead of a file picker because Chrome
+   closes extension popups when a native file dialog opens. */
 
 .drop-zone {
   display: flex;
@@ -501,7 +505,7 @@ body {
 .upload-status.success { color: var(--green); font-weight: 600; }
 .upload-status.error { color: var(--red); }
 
-/* ── Resume Textarea ─────────────────────────────────────────────────────── */
+/* Resume tab — text area for pasting and the save button */
 
 .hint {
   font-size: 12px;
@@ -543,6 +547,6 @@ body {
   animation: fadeOut 2s forwards;
 }
 
-/* ── Utility ─────────────────────────────────────────────────────────────── */
+/* Utility class to hide elements without removing them from the DOM */
 
 .hidden { display: none !important; }
