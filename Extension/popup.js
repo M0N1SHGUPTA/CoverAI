@@ -11,10 +11,10 @@
 // Railway/Render/Fly.io, swap this to your deployed URL.
 //
 // For dev:
-const BACKEND_URL = 'http://localhost:8000';
+// const BACKEND_URL = 'http://localhost:8000';
 //
-// For production (uncomment and replace with your actual URL):
-// const BACKEND_URL = 'https://your-app-name.up.railway.app';
+// For production:
+const BACKEND_URL = 'https://coverai-dqa7.onrender.com';
 
 // We trim the resume before sending to save tokens. 3000 chars is plenty
 // for the LLM to understand someone's background.
