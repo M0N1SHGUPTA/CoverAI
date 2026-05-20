@@ -159,7 +159,7 @@ One short, direct line. "Happy to walk through any of this." Done.
 Sign-off: "Best," then full name. Phone/GitHub/LinkedIn ONLY if in resume.
 
 BANNED — rewrite immediately if any appear:
-"I am excited/thrilled/eager to apply", "I am passionate about", "I bring a strong", "I believe I would be", "I look forward to", "leverage my", "Although I'm early in my career", "strong communication skills", "fast learner", "team player", "I'd love to discuss", "excited about the opportunity"
+"I am excited/thrilled/eager to apply", "I am passionate about", "I bring a strong", "I believe I would be", "I look forward to", "leverage my", "Although I'm early in my career", "strong communication skills", "fast learner", "team player", "I'd love to discuss", "excited about the opportunity", "demonstrates", "showcases", "highlights", "my experience aligns" — don't narrate what something proves, just state what was built/done.
 
 TONE: Direct, human. Not corporate. Not AI.
 Output ONLY the letter."""
