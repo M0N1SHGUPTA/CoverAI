@@ -149,7 +149,7 @@ dropZone.addEventListener('drop', async (e) => {
   } catch (err) {
     uploadStatus.textContent = `✗ ${err.message}`;
     uploadStatus.className = 'upload-status error';
-    console.error('[ApplyAI] PDF upload error:', err);
+
   }
 });
 
@@ -196,7 +196,7 @@ scanBtn.addEventListener('click', async () => {
     }
   } catch (err) {
     setStatus('error', 'Error reading page. Refresh the tab and try again.');
-    console.error('[ApplyAI] Scan error:', err);
+
   }
 });
 
