@@ -22,33 +22,33 @@ const MAX_RESUME_CHARS = 3000;
 
 // Grab all the DOM elements we'll need. Doing this once at the top is
 // faster than querying inside every event handler.
-const tabs           = document.querySelectorAll('.tab');
-const tabContents    = document.querySelectorAll('.tab-content');
-const scanBtn        = document.getElementById('scanBtn');
-const generateBtn    = document.getElementById('generateBtn');
-const statusDot      = document.getElementById('statusDot');
-const statusText     = document.getElementById('statusText');
-const jobPreview     = document.getElementById('jobPreview');
-const previewTitle   = document.getElementById('previewTitle');
-const previewUrl     = document.getElementById('previewUrl');
-const platformBadge  = document.getElementById('platformBadge');
-const toneSelect     = document.getElementById('toneSelect');
-const typeSelect     = document.getElementById('typeSelect');
-const outputSection  = document.getElementById('outputSection');
-const outputArea     = document.getElementById('outputArea');
-const copyBtn        = document.getElementById('copyBtn');
-const regenerateBtn  = document.getElementById('regenerateBtn');
-const copyFeedback   = document.getElementById('copyFeedback');
-const charCount      = document.getElementById('charCount');
+const tabs = document.querySelectorAll('.tab');
+const tabContents = document.querySelectorAll('.tab-content');
+const scanBtn = document.getElementById('scanBtn');
+const generateBtn = document.getElementById('generateBtn');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
+const jobPreview = document.getElementById('jobPreview');
+const previewTitle = document.getElementById('previewTitle');
+const previewUrl = document.getElementById('previewUrl');
+const platformBadge = document.getElementById('platformBadge');
+const toneSelect = document.getElementById('toneSelect');
+const typeSelect = document.getElementById('typeSelect');
+const outputSection = document.getElementById('outputSection');
+const outputArea = document.getElementById('outputArea');
+const copyBtn = document.getElementById('copyBtn');
+const regenerateBtn = document.getElementById('regenerateBtn');
+const copyFeedback = document.getElementById('copyFeedback');
+const charCount = document.getElementById('charCount');
 const loadingSection = document.getElementById('loadingSection');
-const loadingText    = document.getElementById('loadingText');
-const errorBox       = document.getElementById('errorBox');
-const errorText      = document.getElementById('errorText');
-const resumeInput    = document.getElementById('resumeInput');
-const saveResumeBtn  = document.getElementById('saveResume');
-const saveFeedback   = document.getElementById('saveFeedback');
-const dropZone       = document.getElementById('dropZone');
-const uploadStatus   = document.getElementById('uploadStatus');
+const loadingText = document.getElementById('loadingText');
+const errorBox = document.getElementById('errorBox');
+const errorText = document.getElementById('errorText');
+const resumeInput = document.getElementById('resumeInput');
+const saveResumeBtn = document.getElementById('saveResume');
+const saveFeedback = document.getElementById('saveFeedback');
+const dropZone = document.getElementById('dropZone');
+const uploadStatus = document.getElementById('uploadStatus');
 
 // The scanned job data lives here between scan and generate.
 // Gets populated when the user clicks "Scan Page".
@@ -149,7 +149,7 @@ dropZone.addEventListener('drop', async (e) => {
   } catch (err) {
     uploadStatus.textContent = `✗ ${err.message}`;
     uploadStatus.className = 'upload-status error';
-
+    console.error('[ApplyAI] PDF upload error:', err);
   }
 });
 
@@ -169,7 +169,7 @@ scanBtn.addEventListener('click', async () => {
 
     // Inject the content script. If it's already there from a previous
     // scan, the catch swallows the "already injected" error silently.
-    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }).catch(() => {});
+    await chrome.scripting.executeScript({ target: { tabId: tab.id }, files: ['content.js'] }).catch(() => { });
 
     // Ask content.js to scrape the page and send back the results
     const response = await chrome.tabs.sendMessage(tab.id, { action: 'extractJob' });
@@ -196,7 +196,7 @@ scanBtn.addEventListener('click', async () => {
     }
   } catch (err) {
     setStatus('error', 'Error reading page. Refresh the tab and try again.');
-
+    console.error('[ApplyAI] Scan error:', err);
   }
 });
 
