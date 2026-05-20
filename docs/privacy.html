@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Privacy Policy — ApplyAI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a0f;
+      color: #c8cad0;
+      line-height: 1.7;
+      min-height: 100vh;
+    }
+
+    /* Subtle gradient glow at the top */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -40%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80%;
+      height: 60%;
+      background: radial-gradient(ellipse, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 60px 24px 80px;
+    }
+
+    /* Header */
+    .header {
+      margin-bottom: 48px;
+      padding-bottom: 32px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      border-radius: 100px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #818cf8;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 20px;
+    }
+
+    .badge::before {
+      content: '🔒';
+      font-size: 0.8rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f0f0f5;
+      letter-spacing: -0.02em;
+      margin-bottom: 8px;
+    }
+
+    .effective-date {
+      font-size: 0.85rem;
+      color: #6b6e7a;
+    }
+
+    /* Sections */
+    h2 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      color: #e4e5ea;
+      margin-top: 40px;
+      margin-bottom: 12px;
+      letter-spacing: -0.01em;
+    }
+
+    h2 .number {
+      color: #818cf8;
+      margin-right: 8px;
+      font-weight: 700;
+    }
+
+    p {
+      margin-bottom: 14px;
+      font-size: 0.925rem;
+    }
+
+    ul {
+      list-style: none;
+      margin-bottom: 14px;
+      padding-left: 0;
+    }
+
+    ul li {
+      position: relative;
+      padding-left: 20px;
+      margin-bottom: 8px;
+      font-size: 0.925rem;
+    }
+
+    ul li::before {
+      content: '›';
+      position: absolute;
+      left: 0;
+      color: #818cf8;
+      font-weight: 700;
+      font-size: 1.1rem;
+      line-height: 1.6;
+    }
+
+    strong {
+      color: #e0e1e6;
+      font-weight: 600;
+    }
+
+    /* Callout boxes */
+    .callout {
+      background: rgba(99, 102, 241, 0.05);
+      border: 1px solid rgba(99, 102, 241, 0.12);
+      border-radius: 10px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      font-size: 0.9rem;
+    }
+
+    .callout.green {
+      background: rgba(52, 211, 153, 0.05);
+      border-color: rgba(52, 211, 153, 0.15);
+    }
+
+    .callout.green strong {
+      color: #6ee7b7;
+    }
+
+    .callout-title {
+      font-weight: 600;
+      color: #818cf8;
+      margin-bottom: 6px;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .callout.green .callout-title {
+      color: #6ee7b7;
+    }
+
+    /* Data flow table */
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0 20px;
+      font-size: 0.85rem;
+    }
+
+    .data-table th {
+      text-align: left;
+      padding: 10px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      color: #a0a3b0;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .data-table td {
+      padding: 10px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #c8cad0;
+    }
+
+    .data-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .data-table .tag {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+
+    .tag.local {
+      background: rgba(52, 211, 153, 0.12);
+      color: #6ee7b7;
+    }
+
+    .tag.transit {
+      background: rgba(251, 191, 36, 0.12);
+      color: #fbbf24;
+    }
+
+    .tag.none {
+      background: rgba(99, 102, 241, 0.12);
+      color: #a5b4fc;
+    }
+
+    /* Contact section */
+    .contact-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 10px;
+      padding: 20px 24px;
+      margin-top: 12px;
+    }
+
+    .contact-card a {
+      color: #818cf8;
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    .contact-card a:hover {
+      color: #a5b4fc;
+    }
+
+    /* Footer */
+    .footer {
+      margin-top: 56px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.06);
+      text-align: center;
+      font-size: 0.8rem;
+      color: #4a4d5a;
+    }
+
+    .footer a {
+      color: #6b6e7a;
+      text-decoration: none;
+    }
+
+    .footer a:hover {
+      color: #818cf8;
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container {
+        padding: 40px 18px 60px;
+      }
+
+      h1 {
+        font-size: 1.6rem;
+      }
+
+      .data-table {
+        font-size: 0.8rem;
+      }
+
+      .data-table th,
+      .data-table td {
+        padding: 8px 10px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="container">
+
+    <div class="header">
+      <div class="badge">Privacy Policy</div>
+      <h1>ApplyAI Privacy Policy</h1>
+      <p class="effective-date">Effective Date: May 20, 2026 &nbsp;·&nbsp; Last Updated: May 20, 2026</p>
+    </div>
+
+    <p>
+      ApplyAI ("the Extension") is a Chrome browser extension that helps job seekers generate tailored
+      cover letters and cold emails. This policy explains what data we collect, how we use it, and how
+      we protect it. We believe in minimal data collection — we only process what's necessary to generate
+      your message, and we don't store your personal data on our servers.
+    </p>
+
+    <div class="callout green">
+      <div class="callout-title">TL;DR</div>
+      <p style="margin-bottom:0;">
+        Your resume stays on your device. Job descriptions are processed in memory and never saved.
+        We don't track you, sell your data, or store your personal information on our servers.
+      </p>
+    </div>
+
+
+    <h2><span class="number">1.</span> Information We Collect</h2>
+
+    <p>The Extension collects and processes the following data <strong>only when you explicitly trigger it</strong>:</p>
+
+    <ul>
+      <li><strong>Resume Text</strong> — text you paste or import from a PDF in the "My Resume" tab.</li>
+      <li><strong>Job Listing Content</strong> — job description text scraped from the active tab when you click "Scan
+        Page".</li>
+      <li><strong>Page URL &amp; Title</strong> — the URL and title of the job listing page you scan.</li>
+      <li><strong>Generation Preferences</strong> — your selected tone (professional, enthusiastic, etc.) and message
+        type (cover letter or cold email).</li>
+    </ul>
+
+
+    <h2><span class="number">2.</span> How Your Data Is Stored</h2>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Data</th>
+          <th>Where It Lives</th>
+          <th>Duration</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Resume text</td>
+          <td><span class="tag local">Local Only</span> &nbsp; Chrome's local storage on your device</td>
+          <td>Until you clear it or uninstall</td>
+        </tr>
+        <tr>
+          <td>Job description</td>
+          <td><span class="tag transit">In Transit</span> &nbsp; Sent to our server for processing</td>
+          <td>Not stored — processed in memory only</td>
+        </tr>
+        <tr>
+          <td>PDF resume file</td>
+          <td><span class="tag transit">In Transit</span> &nbsp; Uploaded for text extraction</td>
+          <td>Deleted immediately after extraction</td>
+        </tr>
+        <tr>
+          <td>Generated messages</td>
+          <td><span class="tag local">Local Only</span> &nbsp; Displayed in the extension popup</td>
+          <td>Until the popup closes</td>
+        </tr>
+        <tr>
+          <td>Browsing history</td>
+          <td><span class="tag none">Not Collected</span></td>
+          <td>—</td>
+        </tr>
+        <tr>
+          <td>Personal identity info</td>
+          <td><span class="tag none">Not Collected</span></td>
+          <td>—</td>
+        </tr>
+      </tbody>
+    </table>
+
+
+    <h2><span class="number">3.</span> How Your Data Is Used</h2>
+
+    <p>Your data is used exclusively to generate job application messages:</p>
+
+    <ul>
+      <li>Your <strong>resume text</strong> and <strong>job listing content</strong> are sent to our backend server over
+        HTTPS.</li>
+      <li>Our server forwards this data to the <strong>Groq API</strong> (powered by Meta's LLaMA models) to generate a
+        tailored cover letter or cold email.</li>
+      <li>The generated message is sent back to the Extension and displayed in the popup.</li>
+      <li>If you upload a PDF, it is sent to our server for text extraction using <strong>pdfplumber</strong> (an
+        open-source Python library). The file is deleted immediately after extraction.</li>
+    </ul>
+
+    <p>We <strong>do not</strong>:</p>
+    <ul>
+      <li>Store your resume, job descriptions, or generated messages on our servers.</li>
+      <li>Use your data for advertising, profiling, or analytics beyond anonymous usage counts.</li>
+      <li>Sell, share, or rent your data to any third party.</li>
+      <li>Train AI models on your data.</li>
+    </ul>
+
+
+    <h2><span class="number">4.</span> Third-Party Services</h2>
+
+    <p>The Extension relies on the following third-party service for AI generation:</p>
+
+    <div class="callout">
+      <div class="callout-title">Groq API</div>
+      <p style="margin-bottom:0;">
+        We use Groq's inference API to run Meta's LLaMA language models. Your resume excerpt and job description
+        are sent to Groq's servers for processing. Groq's privacy policy is available at
+        <a href="https://groq.com/privacy-policy/" target="_blank" rel="noopener"
+          style="color:#818cf8;">groq.com/privacy-policy</a>.
+        Per Groq's policy, data sent through their API is not used to train models.
+      </p>
+    </div>
+
+
+    <h2><span class="number">5.</span> Server-Side Analytics</h2>
+
+    <p>
+      Our backend collects <strong>minimal, anonymous analytics</strong> to monitor service health:
+    </p>
+    <ul>
+      <li>Total number of API calls (generate and upload endpoints).</li>
+      <li>Approximate unique user count based on IP addresses.</li>
+      <li>Timestamps of recent requests.</li>
+    </ul>
+    <p>
+      This data is held <strong>in memory only</strong> and resets every time the server restarts.
+      IP addresses are used solely for rate limiting and anonymous counting — they are never logged
+      to disk, shared with third parties, or linked to any personal information.
+    </p>
+
+
+    <h2><span class="number">6.</span> Permissions Explained</h2>
+
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>Permission</th>
+          <th>Why We Need It</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>activeTab</strong></td>
+          <td>To read the job listing content from the tab you're currently viewing, only when you click "Scan Page".
+          </td>
+        </tr>
+        <tr>
+          <td><strong>scripting</strong></td>
+          <td>To inject a content script that extracts the job description text from the page.</td>
+        </tr>
+        <tr>
+          <td><strong>storage</strong></td>
+          <td>To save your resume text locally on your device so you don't have to re-enter it every time.</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <p>
+      The Extension <strong>does not</strong> request access to browsing history, bookmarks, downloads,
+      or any data beyond the active tab you explicitly choose to scan.
+    </p>
+
+
+    <h2><span class="number">7.</span> Data Security</h2>
+
+    <p>We take reasonable measures to protect your data:</p>
+    <ul>
+      <li>All communication between the Extension and our server uses <strong>HTTPS encryption</strong>.</li>
+      <li>Our server enforces <strong>rate limiting</strong> to prevent abuse.</li>
+      <li>Resume text and job data are <strong>processed in memory</strong> and never written to disk on our servers.
+      </li>
+      <li>PDF uploads are written to a <strong>temporary file</strong> that is automatically deleted after text
+        extraction.</li>
+    </ul>
+
+
+    <h2><span class="number">8.</span> Your Rights &amp; Choices</h2>
+
+    <ul>
+      <li>You can <strong>delete your saved resume</strong> at any time by clearing the text in the "My Resume" tab and
+        saving.</li>
+      <li>You can <strong>uninstall the Extension</strong> at any time, which removes all locally stored data.</li>
+      <li>You can <strong>choose not to scan</strong> a page — the Extension never reads any page content without your
+        explicit action.</li>
+      <li>No account or sign-up is required to use the Extension.</li>
+    </ul>
+
+
+    <h2><span class="number">9.</span> Children's Privacy</h2>
+
+    <p>
+      The Extension is not intended for use by individuals under the age of 13. We do not knowingly
+      collect data from children.
+    </p>
+
+
+    <h2><span class="number">10.</span> Changes to This Policy</h2>
+
+    <p>
+      We may update this Privacy Policy from time to time. Any changes will be posted on this page
+      with an updated "Last Updated" date. Continued use of the Extension after changes constitutes
+      acceptance of the revised policy.
+    </p>
+
+
+    <h2><span class="number">11.</span> Contact</h2>
+
+    <p>If you have questions or concerns about this Privacy Policy, reach out:</p>
+
+    <div class="contact-card">
+      <p style="margin-bottom:8px;"><strong>Monish Gupta</strong></p>
+      <p style="margin-bottom:4px;">📧 &nbsp; <a href="mailto:monishgupta1510@gmail.com">monishgupta1510@gmail.com</a>
+      </p>
+      <p style="margin-bottom:0;">🔗 &nbsp; <a href="https://github.com/M0N1SHGUPTA" target="_blank"
+          rel="noopener">github.com/M0N1SHGUPTA</a></p>
+    </div>
+
+
+    <div class="footer">
+      <p>© 2026 ApplyAI · Built by <a href="https://github.com/M0N1SHGUPTA" target="_blank" rel="noopener">Monish
+          Gupta</a></p>
+    </div>
+
+  </div>
+
+</body>
+
+</html>
