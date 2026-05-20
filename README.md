@@ -58,23 +58,6 @@ uvicorn main:app --reload
 3. Click **Load unpacked** → select the `Extension/` folder
 4. Pin the extension and you're good to go
 
-## Deploying the Backend
-
-### Railway
-
-1. Push your repo to GitHub
-2. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub
-3. Set the root directory to `Backend`
-4. Add environment variables:
-   - `GROQ_API_KEY` — your Groq API key
-   - `ALLOWED_ORIGINS` — your extension's origin (e.g., `chrome-extension://abcdef1234567890`)
-5. Railway auto-detects the `Procfile` and deploys
-
-### After deploying
-
-1. Copy your Railway URL (e.g., `https://applyai-backend.up.railway.app`)
-2. Open `Extension/popup.js` and update `BACKEND_URL` to your deployed URL
-3. Reload the extension in `chrome://extensions`
 
 ## Features
 
