@@ -4,14 +4,15 @@
 # over a resume + scraped job description, we build a tailored prompt, hit
 # Groq, and send back a ready-to-use cover letter or cold email.
 #
-# There are only three endpoints:
+# Endpoints:
 #   POST /generate       — builds the message using AI
 #   POST /upload-resume  — extracts text from a PDF resume
 #   GET  /health         — simple alive check
+#   GET  /privacy        — serves the privacy policy page
 
 from fastapi import FastAPI, HTTPException, Request, UploadFile, File
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, HTMLResponse
 from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
@@ -337,6 +338,17 @@ async def upload_resume(request: Request, file: UploadFile = File(...)):
 def health():
     """Quick check to see if the server is up. Hit /health and look for 'ok'."""
     return {"status": "ok"}
+
+
+@app.get("/privacy", response_class=HTMLResponse)
+def privacy_policy():
+    """Serves the privacy policy page. This is the URL you paste into the Chrome Web Store."""
+    policy_path = os.path.join(os.path.dirname(__file__), "..", "docs", "privacy.html")
+    # Fallback: if deployed flat (no docs/ folder alongside), check same directory
+    if not os.path.exists(policy_path):
+        policy_path = os.path.join(os.path.dirname(__file__), "privacy.html")
+    with open(policy_path, "r", encoding="utf-8") as f:
+        return HTMLResponse(content=f.read())
 
 
 @app.get("/stats")
