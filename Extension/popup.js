@@ -257,11 +257,12 @@ copyBtn.addEventListener('click', async () => {
   setTimeout(() => copyFeedback.classList.add('hidden'), 2000);
 });
 
-// Live character count — updates as the user types or edits the output
+// Live word count — updates as the user types or edits the output
 outputArea.addEventListener('input', () => updateCharCount());
 function updateCharCount() {
-  const len = outputArea.value.length;
-  charCount.textContent = `${len} char${len !== 1 ? 's' : ''}`;
+  const words = outputArea.value.trim().split(/\s+/).filter(w => w.length > 0);
+  const len = words.length;
+  charCount.textContent = `${len} word${len !== 1 ? 's' : ''}`;
 }
 
 
@@ -277,6 +278,6 @@ function setStatus(state, message) {
 function showLoading(msg) { loadingText.textContent = msg || 'Working…'; loadingSection.classList.remove('hidden'); generateBtn.disabled = true; scanBtn.disabled = true; }
 function hideLoading() { loadingSection.classList.add('hidden'); generateBtn.disabled = false; scanBtn.disabled = false; }
 function showOutput(text) { outputArea.value = text; outputSection.classList.remove('hidden'); updateCharCount(); }
-function hideOutput() { outputSection.classList.add('hidden'); outputArea.value = ''; charCount.textContent = '0 chars'; }
+function hideOutput() { outputSection.classList.add('hidden'); outputArea.value = ''; charCount.textContent = '0 words'; }
 function showError(msg) { errorText.textContent = msg; errorBox.classList.remove('hidden'); }
 function hideError() { errorBox.classList.add('hidden'); }

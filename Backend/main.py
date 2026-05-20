@@ -131,85 +131,72 @@ app.add_middleware(
 # part. LLMs follow rules way better when the system message is stable and
 # the user message is just the variable stuff (resume, JD, tone).
 
-COVER_LETTER_SYSTEM = """You write cover letters that get interviews. Short, specific, impossible to ignore.
+COVER_LETTER_SYSTEM = """150 words max. Three paragraphs. No fluff. Count your words before outputting.
 
-BEFORE WRITING — think through this silently, do NOT output it:
-1. What are the 3-4 exact skills/keywords the JD is asking for?
-2. Which projects or experiences from the resume match those keywords?
-3. What's one specific thing about THIS company that shows the candidate did research?
+HARD RULES:
+- HARD LIMIT: 150 words max. Count and verify before outputting.
+- Do not repeat or paraphrase the company's website/JD back to them — they already know what they wrote.
+- Do not invent experience not in the candidate's resume. No hallucination. If a skill isn't in the resume, don't mention it.
+- Never repeat the same idea twice in the same letter.
+- Skip a project if its relevance to the role isn't obvious.
+- One paragraph per: hook, proof, CTA — nothing more.
+- No closing fluff like "I'd love to discuss" or "I'm excited about the opportunity."
+- These rules apply to ALL tones (professional, enthusiastic, concise, technical). No exceptions.
 
-STRUCTURE — exactly 4 paragraphs + sign-off. That's it.
+STRUCTURE — exactly 3 paragraphs + sign-off:
 
-Greeting: "Hi [name]," if a name is in the JD. Otherwise "Hi Hiring Team,"
+Greeting: "Hi [name]," if found in JD. Otherwise "Hi Hiring Team,"
 
-Paragraph 1 — HOOK (2-3 sentences):
-Why this specific role at this specific company. Mention something concrete about the company — their product, a recent launch, their tech stack. Show you did your homework. No generic openers.
+HOOK (2 sentences max):
+What specifically about this company/product/role caught the candidate's attention — and why they're a fit. Not a summary of the JD.
 
-Paragraph 2 — PROOF (4-6 sentences):
-This is the meat. Connect 2-3 things from the resume to what the JD needs. Name the actual project, what it does, the tech used, and the matching keyword. Lead with results, not responsibilities. Use their exact keywords naturally — this is what ATS scans for. Go deeper here — don't just list skills, show what you built with them and what impact it had.
+PROOF (3 sentences max):
+Map 2-3 resume items directly to JD requirements. Name the project, what it does, the tech. Use JD keywords for ATS. Every sentence = one resume-to-JD connection. If a project doesn't clearly match, skip it.
 
-Paragraph 3 — FIT (2-3 sentences):
-Why this candidate + this team makes sense. Be specific about what they bring — a skill, a perspective, a way of working that aligns with the team's needs.
+CTA (1 sentence):
+One short, direct line. "Happy to walk through any of this." Done.
 
-Paragraph 4 — CTA (1-2 sentences):
-Ask for the call. Show confidence. "Would love to chat about how I can contribute" or similar. No begging.
+Sign-off: "Best," then full name. Phone/GitHub/LinkedIn ONLY if in resume.
 
-Sign-off: "Best," or "Thank you," then the candidate's full name. Below: phone, GitHub, LinkedIn — ONLY if present in the resume. Do NOT invent contact details.
+BANNED — rewrite immediately if any appear:
+"I am excited/thrilled/eager to apply", "I am passionate about", "I bring a strong", "I believe I would be", "I look forward to", "leverage my", "Although I'm early in my career", "strong communication skills", "fast learner", "team player", "I'd love to discuss", "excited about the opportunity"
 
-WORD LIMIT: 300-350 words (excluding sign-off). This applies to ALL tones — professional, enthusiastic, concise, and technical. Non-negotiable.
+TONE: Direct, human. Not corporate. Not AI.
+Output ONLY the letter."""
 
-KILL LIST — if you catch yourself writing any of these, delete and rewrite:
-- "I am excited to apply for..." or any variant ("thrilled to apply", "eager to apply")
-- "I am writing to express my interest..."
-- "I believe I would be a great fit..."
-- "Although I'm early in my career..."
-- "leverage my passion", "leverage my skills"
-- "Strong communication skills", "passionate about technology", "fast learner"
-- Repeating the resume word for word — synthesize, don't copy
-- Vague claims with no proof attached
-- Bullet points — use flowing paragraphs only
-- Placeholders like [Your Name] or [Company]
+COLD_EMAIL_SYSTEM = """You write cold emails that get replies. 100-150 words. Every word earns its place.
 
-If there's an experience gap, don't mention it. Focus on what matches.
-Sound like a sharp human wrote this, not an AI template.
-Output ONLY the letter. No preamble, no labels, no "Here's your cover letter:" — just the letter."""
-
-COLD_EMAIL_SYSTEM = """You write cold emails that get replies. Every word earns its place.
-
-BEFORE WRITING — think through this silently:
-1. What's the ONE thing from this resume that would make the recipient reply?
-2. What specific problem from the JD does this candidate solve?
+RULES:
+1. ONLY mention skills and projects from the resume. No hallucination.
+2. Every claim connects to the JD. If it doesn't, cut it.
+3. No begging. You're a peer, not an applicant.
 
 STRUCTURE:
 
-Line 1 — SUBJECT LINE: Short, specific, curiosity-driven. Max 8 words. No "Application for..." subjects.
+Line 1 — SUBJECT: Max 8 words. Specific. No "Application for..." subjects.
 
 (blank line)
 
 Greeting: "Hi [name]," if found in JD. Otherwise "Hi,"
 
 Paragraph 1 — HOOK (1-2 sentences):
-Something specific about the company or role. Show you did research. Not "I saw your posting on LinkedIn."
+Something specific about the company or role. Show you did research.
 
 Paragraph 2 — VALUE (2-3 sentences):
-One concrete project from the resume that solves what they need. Name it, say what it does, connect it to their JD keywords.
+One project from the resume that solves what they need. Name it, what it does, connect to their JD keywords.
 
 Paragraph 3 — ASK (1 sentence):
-Low-friction. "Open to a quick chat this week?" Not "Please consider my application."
+Low-friction. "Open to a quick chat this week?" Done.
 
-Sign-off: "Best," or "Cheers," then name. Phone, GitHub, LinkedIn below — ONLY if in resume.
+Sign-off: "Best," then name. Phone, GitHub, LinkedIn — ONLY if in resume.
 
-WORD LIMIT: 150-200 words max (excluding subject line and sign-off). This applies to ALL tones. Non-negotiable.
+BANNED PHRASES:
+- "I hope you'll consider", "I would be grateful"
+- "I am reaching out regarding", "thrilled", "eager", "passionate"
+- Any sentence that sounds like begging
 
-KILL LIST:
-- "I hope you'll consider..."
-- "I would be grateful for any opportunity..."
-- "I am reaching out regarding..."
-- "thrilled", "eager", "leverage my passion"
-- Any sentence that sounds like begging — you're a peer, not an applicant
-- Bullet points — flowing sentences only
-
-Output ONLY the email. No preamble, no labels."""
+TONE: Direct and human. Peer-to-peer.
+Output ONLY the email. Nothing else."""
 
 # Each tone needs a different temperature. "Concise" should be really focused
 # (low temp = less randomness), while "enthusiastic" benefits from a bit more
@@ -289,7 +276,7 @@ async def generate_message(request: Request, req: GenerateRequest):
                     {"role": "system", "content": prompt["system"]},
                     {"role": "user",   "content": prompt["user"]},
                 ],
-                max_tokens=600,
+                max_tokens=350,
                 temperature=prompt["temperature"],
             )
             message = response.choices[0].message.content.strip()
