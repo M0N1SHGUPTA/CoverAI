@@ -14,7 +14,7 @@
 // const BACKEND_URL = 'http://localhost:8000';
 //
 // For production:
-const BACKEND_URL = 'https://coverai-dqa7.onrender.com';
+const BACKEND_URL = 'https://applyai-chrome-extension-for-tailored.onrender.com';
 
 // We trim the resume before sending to save tokens. 3000 chars is plenty
 // for the LLM to understand someone's background.
